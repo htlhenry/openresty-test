@@ -32,3 +32,60 @@ function json_decode( str )
     pcall(function( str ) json_value = json.decode(str) end, str)
     return json_value
 end
+
+--稀疏数组
+local json = require("cjson")
+
+
+local t = {1,2}
+t[1000] = 99
+
+
+ngx.say(json.encode(t))  --此行代码会在运行是报错，[error] 9693#9693: *115048 lua entry thread aborted: 
+--runtime error: ...a/soft/openresty_V1.9.7.3/nginx/conf/lua/common/json.lua:6: Cannot serialise table: 
+--excessively sparse array 太稀疏的数组。
+--为什么下标是1000就失败呢？实际上这么做是cjson想保护你的内存资源。她担心这个下标过大直接撑爆内存（贴心小棉袄啊）。
+--如果我们一定要让这种情况下可以decode，就要尝试encode_sparse_array api了。有兴趣的同学可以自己试一试。
+--我相信你看过有关cjson的代码后，就知道cjson的一个简单危险防范应该是怎样完成的。
+
+
+--空table编码为array或者object
+
+-- 内容节选lua-cjson-2.1.0.2/tests/agentzh.t
+=== TEST 1: empty tables as objects
+--- lua
+local cjson = require "cjson"
+print(cjson.encode({}))
+print(cjson.encode({dogs = {}}))
+--- out
+{}
+{"dogs":{}}
+
+
+=== TEST 2: empty tables as arrays
+--- lua
+local cjson = require "cjson"
+cjson.encode_empty_table_as_object(false)
+print(cjson.encode({}))
+print(cjson.encode({dogs = {}}))
+--- out
+[]
+{"dogs":[]}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
