@@ -1,3 +1,6 @@
+
+--cjson 2.1.0 该版本新增一个cjson.safe模块接口，该接口兼容cjson模块，并且在解析错误时不抛出异常，而是返回nil。
+
 local json = require("cjson.safe")
 local str = [[{"key":"value"}]]
 
@@ -17,3 +20,15 @@ end
 --哈希表的遍历本身也不会有数组遍历那么高效，毕竟哈希表 就不是为遍历而设计的数据结构。）
 
 
+--如果需要在Lua中处理错误，必须使用函数pcall（protected call）来包装需要执行的代码。 
+--pcall接收一个函数和要传递给后者的参数，并执行，执行结果：有错误、无错误；返回值true或者或false, errorinfo。
+--pcall以一种"保护模式"来调用第一个参数，因此pcall可以捕获函数执行中的任何错误。
+
+local json = require("cjson")
+
+
+function json_decode( str )
+    local json_value = nil
+    pcall(function( str ) json_value = json.decode(str) end, str)
+    return json_value
+end
